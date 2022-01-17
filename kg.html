@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8"/>
+        <title>CookRob 知识图谱</title>
+        <meta name="description" content="包含厨艺相关知识以及机器人信息的知识图谱"/>
+        <meta name="author" content="Chen Zhike" />
+    </head>
+    <style>
+        body {
+            background-color: #272b30;   /*背景颜色*/
+            padding-bottom: 30px, 40px;
+            text-align: center;
+            font-family: OpenSans-Light, PingFang SC, Hiragino Sans GB, Microsoft Yahei, Microsoft Jhenghei, sans-serif;
+        }
+    </style>
+    <body>
+        <h1 style="color: #fff;font-size: 32px;margin-bottom: 10px;margin-top: 10px; text-align: left;margin-left: 40px">CookRob Knowledge Graph</h1>
+        
+        <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script> 
+        <script>
+            var colors = ['#6ca46c', '#ca635f', '#4e88af'];
+            var width = 860;
+            var height = 560;
+
+            var svg = d3.select("body")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+            var graph;
+            var edges = [];
+
+            d3.json("https://raw.githubusercontent.com/ngl567/CookBook-KG/master/visualization/vizdata_mimini_aglin.json", function(data) {
+
+                graph = data;
+
+                graph.links.map(function(item) {
+                    edges.push({
+                        source: find_index(item.source), 
+                        target: find_index(item.target),
+                        relation: item.relation,
+                        color: item.value
+                    })
+                });
+
+                function find_index(name) {
+                    var index = 0;
+                    var tmp = graph.nodes.find(function(item, i){
+                        if(item.id == name){
+                            index = i;
+                            return i;
+                        }
+                    });
+                    return index;
+                };
+
+                var force = d3.layout.force()
+                    .nodes(graph.nodes)
+                    .links(edges)
+                    .size([width, height])
+                    .linkDistance(50)
+                    .charge([-200]);
+                
+                force.start();
+
+                var svg_edges = svg.append('g')
+                    .attr("class", "links")
+                    .selectAll("line")
+                    .data(edges)
+                    .enter()
+                    .append("line")
+                    .style("stroke", "#ccc")
+                    .style("stroke-width", 1);
+            
+                var svg_nodes = svg.append('g')
+                    .attr("class", "nodes")
+                    .selectAll("circle")
+                    .data(graph.nodes)
+                    .enter()
+                    .append("circle")
+                    .attr("r", function(d){return parseInt(d.size);})
+                    .style("fill", function(d){return colors[parseInt(d.group)];})
+                    .call(force.drag)
+                    .on("click", function(d){
+                        var clickedCircle = this;
+                        d3.selectAll(".circle").each(function(){
+                            var currCircle = this;
+                            d3.select(this).select()
+                        })
+                    })
+
+                
+                var svg_texts = svg.append('g')
+                    .attr("class", "texts")
+                    .selectAll("text")
+                    .data(graph.nodes)
+                    .enter()
+                    .append("text")
+                    .attr("text-anchor", "middle")
+                    .style("fill", "black")
+                    .attr("dx", 20)
+                    .attr("dy", 8)
+                    .text(function(d){return d.id;});
+                
+                var svg_labels = svg.append('g')
+                    .attr("class", "linetexts")
+                    .selectAll("text")
+                    .data(edges)
+                    .enter()
+                    .append("text")
+                    .style("display","block")
+                    .text(function(d){return d.relation;})
+                    .style("visibility", "hidden");
+                
+                function zoomed() {
+                    svg_edges.attr("transform", d3.event.transform);
+                    svg_nodes.attr("transform", d3.event.transform);
+                    svg_texts.attr("transform", d3.event.transform);
+                    svg_labels.attr('transform', d3.event.transform);
+                }
+
+                // svg.call(d3.zoom()
+                //     .scaleExtent([1 / 8, 8])
+                //     .on("zoom", zoomed));
+                
+                force.on("tick", function(){
+                    svg_edges.attr("x1", function(d){return d.source.x;})
+                            .attr("y1", function(d){return d.source.y;})
+                            .attr("x2", function(d){return d.target.x;})
+                            .attr("y2", function(d){return d.target.y;});
+                    
+                    svg_nodes.attr("cx", function(d){return d.x;})
+                            .attr("cy", function(d){return d.y;});
+                    
+                    svg_texts.attr("x", function(d){return d.x;})
+                            .attr("y", function(d){return d.y;});
+                    
+                    svg_labels.attr("x", function(d){return (d.source.x + d.target.x) / 2;})
+                            .attr("y", function(d){return (d.source.y + d.target.y) / 2;});
+                })
+            })
+            
+        </script>
+    </body>
+</html>
