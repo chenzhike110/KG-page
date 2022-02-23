@@ -2,9 +2,12 @@
 <html>
     <head>
         <meta charset="UTF-8"/>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>CookRob 知识图谱</title>
         <meta name="description" content="包含厨艺相关知识以及机器人信息的知识图谱"/>
         <meta name="author" content="Chen Zhike" />
+        <script src="https://libs.baidu.com/jquery/2.1.4/jquery.min.js"></script>
     </head>
     <style>
         body {
@@ -13,13 +16,347 @@
             text-align: center;
             font-family: OpenSans-Light, PingFang SC, Hiragino Sans GB, Microsoft Yahei, Microsoft Jhenghei, sans-serif;
         }
+
+        /*之前在js代码里面定义了classes，这边就给这些写样式*/
+        .links line {
+            stroke: rgb(240, 240, 240); /*线的颜色*/
+            stroke-opacity: 0.2;        /*线的透明度*/
+        }
+        .links line.inactive {
+            /*display: none !important;*/
+            stroke-opacity: 0;
+        }
+
+        .linetexts {
+            fill-opacity: 0;
+            font-size: 8px ;
+            font-family: SimSun;
+            fill:#fff;
+        }
+        .linetexts.inactive {
+            display: none !important;
+        }
+
+        .nodes circle {
+            stroke: #fff;
+            stroke-width: 1.5px;        /*圆的描边宽度*/
+        }
+        .nodes circle:hover {
+            cursor: pointer;
+        }
+        .nodes circle.inactive {
+            display: none !important;
+        }
+
+        /*默认显示所有的圆圈，进入模式切换之后才会显示text*/
+        .texts text {
+            display: none;
+        }
+        .texts text:hover {
+            cursor: pointer;
+        }
+        .texts text.inactive {
+            display: none !important;
+        }
+
+        /*indicator的样式*/
+        #indicator {
+            position: absolute;
+            left: 30px;
+            bottom: 90px;
+            text-align: left;
+            color: #f2f2f2;
+            font-size: 16px;
+        }
+
+        /*indicator中每一个小的div/色块/图例的样式*/
+        #indicator>div {
+            margin-bottom: 10px; 
+        }
+
+        #indicator span {
+            display: inline-block;
+            width: 35px;
+            height: 20px;
+            position: relative;
+            top: 2px;
+            margin-right: 8px;
+        }
+
+        /*mode-模式切换的style*/
+        #mode {
+            position: absolute;
+            top: 100px;
+            left: 30px;
+        }
+
+        #mode span {
+            display: inline-block;
+            border: 1px solid #fff;
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: color, background-color .3s; /*CSS3中的渐变*/
+            -o-transition: color, background-color .3s;
+            -ms-transition: color, background-color .3s;
+            -moz-transition: color, background-color .3s;
+            -webkit-transition: color, background-color .3s;
+        }
+
+        /*当按键处于激活状态的时候*/
+        #mode span.active {
+            background-color: #fff;
+            color: #333;
+            cursor: pointer;
+        }
+
+        /*当按键处于鼠标悬浮状态的时候*/
+        #mode span:hover {
+            background-color: #aaa;
+            color: #333;
+            cursor: pointer;
+        }
+
+        /*switch1-菜品大类实体显示开关切换的style*/
+        #switch1 {
+            position: absolute;
+            top: 185px;
+            left: 170px;
+        }
+
+        #switch1 span {
+            display: inline-block;
+            border: 1px solid #fff;
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: color, background-color .3s; /*CSS3中的渐变*/
+            -o-transition: color, background-color .3s;
+            -ms-transition: color, background-color .3s;
+            -moz-transition: color, background-color .3s;
+            -webkit-transition: color, background-color .3s;
+        }
+
+        /*当按键处于激活或者鼠标悬浮状态的时候*/
+        #switch1 span.active, #switch1 span:hover {
+            background-color: #fff;
+            color: #333;
+            cursor: pointer;
+        }
+
+        /*switch2-菜品大类实体显示开关切换的style*/
+        #switch2 {
+            position: absolute;
+            top: 222px;
+            left: 170px;
+        }
+
+        #switch2 span {
+            display: inline-block;
+            border: 1px solid #fff;
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: color, background-color .3s; /*CSS3中的渐变*/
+            -o-transition: color, background-color .3s;
+            -ms-transition: color, background-color .3s;
+            -moz-transition: color, background-color .3s;
+            -webkit-transition: color, background-color .3s;
+        }
+
+        /*当按键处于激活或者鼠标悬浮状态的时候*/
+        #switch2 span.active, #switch2 span:hover {
+            background-color: #fff;
+            color: #333;
+            cursor: pointer;
+        }
+
+        /*switch3-菜品大类实体显示开关切换的style*/
+        #switch3 {
+            position: absolute;
+            top: 258px;
+            left: 170px;
+        }
+
+        #switch3 span {
+            display: inline-block;
+            border: 1px solid #fff;
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: color, background-color .3s; /*CSS3中的渐变*/
+            -o-transition: color, background-color .3s;
+            -ms-transition: color, background-color .3s;
+            -moz-transition: color, background-color .3s;
+            -webkit-transition: color, background-color .3s;
+        }
+
+        /*当按键处于激活或者鼠标悬浮状态的时候*/
+        #switch3 span.active, #switch4 span:hover {
+            background-color: #fff;
+            color: #333;
+            cursor: pointer;
+        }
+
+        /*switch2-菜品大类实体显示开关切换的style*/
+        #switch4 {
+            position: absolute;
+            top: 293px;
+            left: 170px;
+        }
+
+        #switch4 span {
+            display: inline-block;
+            border: 1px solid #fff;
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: color, background-color .3s; /*CSS3中的渐变*/
+            -o-transition: color, background-color .3s;
+            -ms-transition: color, background-color .3s;
+            -moz-transition: color, background-color .3s;
+            -webkit-transition: color, background-color .3s;
+        }
+
+        /*当按键处于激活或者鼠标悬浮状态的时候*/
+        #switch4 span.active, #switch4 span:hover {
+            background-color: #fff;
+            color: #333;
+            cursor: pointer;
+        }
+        
+
+        /*info的样式*/
+        #info {
+            position: absolute;
+            top: 0px;			/*10px*/
+            /*bottom: 40px;*/
+            right: 10px;   		/*20px*/
+            text-align: right;		/*right*/
+            width: 253px;  		/*255px*/
+        }
+
+        #info p {
+            color: #fff;
+            font-size: 12px;
+            margin-top: 0px;
+            margin-bottom: 5px;
+        }
+
+        #info p span {
+            color: #888;
+            margin-right: 0px;
+        }
+
+        /*tips的样式*/
+        #tips {
+            position: absolute;
+            left: 20px;
+            right: 10px;
+            top: 350px;
+            text-align: left;
+            color: #f2f2f2;
+            font-size: 12px;
+            width:230px;
+        }
+
+        /*indicator中每一个小的div/色块/图例的样式*/
+        #tips>div {
+            margin-bottom: 5px; 
+        }
+
+        #tips span {
+            display: inline-block;
+            width: 60px;
+            height: 20px;
+            position: relative;
+            top: 2px;
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        /*搜索框的样式*/
+        #search input {
+            position: absolute;
+            top: 150px;
+            left: 30px;
+            color: #fff;
+            border: none;
+            outline: none;
+            box-shadow: none;
+            width: 200px;
+            background-color: #666;
+        }
     </style>
     <body>
-        <h1 style="color: #fff;font-size: 32px;margin-bottom: 10px;margin-top: 10px; text-align: left;margin-left: 40px">CookRob Knowledge Graph</h1>
-        
+        <!-- 标题 -->
+        <h1 style="color: #fff;font-size: 32px;margin-bottom: 10px;margin-top: 10px; text-align: left;margin-left: 40px">CookRob 知识图谱</h1>
+
+        <!-- 定义div存放关系图 -->
+        <!-- NOTE: 父元素采用相对定位，里面的元素采用绝对定位 -->
+        <div style="text-align: center;position: relative;">
+            <svg width="860" height="560" style="margin-left: 30px;margin-bottom: -150px" id="svg1"></svg>
+            <!-- 图例 -->
+            <div id="indicator"></div>
+
+            <!-- 模式 -->
+            <div id="mode">
+                <span class="active" style="border-top-right-radius: 0;border-bottom-right-radius: 0;">Circles</span>
+                <span style="border-top-left-radius: 0;border-bottom-left-radius: 0;position: relative;left: -5px;">Texts</span>
+            </div>
+
+            <!-- 显示切换1 -->
+            <div id="switch1">
+                <span class="active" style="border-top-right-radius: 0;border-bottom-right-radius: 0;">On</span>
+                <span style="border-top-left-radius: 0;border-bottom-left-radius: 0;position: relative;left: -5px;">Off</span>
+            </div>
+
+            <!-- 显示切换2 -->
+            <div id="switch2">
+                <span class="active" style="border-top-right-radius: 0;border-bottom-right-radius: 0;">On</span>
+                <span style="border-top-left-radius: 0;border-bottom-left-radius: 0;position: relative;left: -5px;">Off</span>
+            </div>
+
+            <!-- 显示切换3 -->
+            <div id="switch3">
+                <span class="active" style="border-top-right-radius: 0;border-bottom-right-radius: 0;">On</span>
+                <span style="border-top-left-radius: 0;border-bottom-left-radius: 0;position: relative;left: -5px;">Off</span>
+            </div>
+
+            <!-- 显示切换4 -->
+            <div id="switch4">
+                <span class="active" style="border-top-right-radius: 0;border-bottom-right-radius: 0;">On</span>
+                <span style="border-top-left-radius: 0;border-bottom-left-radius: 0;position: relative;left: -5px;">Off</span>
+            </div>
+
+            <!-- 搜索框 -->
+            <div id="search">
+                <input type="text" autocomplete="off" class="form-control">
+            </div>
+
+            <!-- 每个结点的信息 -->
+            <div id="info">
+                <h4></h4>
+            </div>
+
+        <!-- 提示 -->
+            <div id="tips"></div>
+        </div>
+        /*
+        <div style="text-align: center;position: relative;">
+            <svg width="960" height="240" id="svg2" style="margin-right: 60px;">
+                <!-- D3 -->
+                <g></g>
+            </svg>
+        </div>
         <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script> 
         <script>
-            var colors = ['#6ca46c', '#ca635f', '#4e88af'];
+            $(document).ready(function() {
             var width = 860;
             var height = 560;
 
@@ -31,116 +368,131 @@
             var graph;
             var edges = [];
 
-            d3.json("https://raw.githubusercontent.com/ngl567/CookBook-KG/master/visualization/vizdata_mimini_aglin.json", function(data) {
+            var names = ['菜品大类', '精品特色菜', '原料', '工艺'];
+            var colors = ['#6ca46c', '#ca635f', '#4e88af', '#EDCF4A'];
 
-                graph = data;
+            for (var i = 0; i < names.length; i++) {
+                // 选中indicator，每一种都append一个div，就是前面的小色块
+                $('#indicator').append("<div><span style='background-color:" + colors[i] + "'></span>" + names[i] +"</div>")
+            }
 
-                graph.links.map(function(item) {
-                    edges.push({
-                        source: find_index(item.source), 
-                        target: find_index(item.target),
-                        relation: item.relation,
-                        color: item.value
-                    })
-                });
+            var help = ['小助手', '1.开始如果没有节点和边的网状可视化显示，刷新便可出现', '2.鼠标放置在任意节点上，出现和此节点相关的所有节点及之间的关系，右侧自动呈现菜品相关信息', '3.搜索框中输入菜品名称，呈现此菜品所有相关节点，并且此时鼠标位于某个节点上方时移开鼠标能够保持知识图谱当前状态', '4.模式切换按钮可切换对节点的不同可视化表示，Circles为点，Texts为文字', '5.左侧不同颜色的条形表示不同类型的节点，On/Off切换开关可打开或关闭同样类型所有节点的可视化显示'];
+            $('#tips').append("<div><span>" + help[0] + "</span></div>")
+            for (var i = 1; i < help.length; i++) {
+                // 选中indicator，每一种都append一个div，就是前面的小色块
+                $('#tips').append("<div>" + help[i] +"</div>")
+            }
 
-                function find_index(name) {
-                    var index = 0;
-                    var tmp = graph.nodes.find(function(item, i){
-                        if(item.id == name){
-                            index = i;
-                            return i;
-                        }
-                    });
-                    return index;
-                };
+            // d3.json("/home/czk119/Desktop/Knowledge-graph/KG-page/data/vizdata_mimini_aglin.json", function(data) {
 
-                var force = d3.layout.force()
-                    .nodes(graph.nodes)
-                    .links(edges)
-                    .size([width, height])
-                    .linkDistance(50)
-                    .charge([-200]);
+            //     graph = data;
+
+            //     graph.links.map(function(item) {
+            //         edges.push({
+            //             source: find_index(item.source), 
+            //             target: find_index(item.target),
+            //             relation: item.relation,
+            //             color: item.value
+            //         })
+            //     });
+
+            //     function find_index(name) {
+            //         var index = 0;
+            //         var tmp = graph.nodes.find(function(item, i){
+            //             if(item.id == name){
+            //                 index = i;
+            //                 return i;
+            //             }
+            //         });
+            //         return index;
+            //     };
+
+            //     var force = d3.layout.force()
+            //         .nodes(graph.nodes)
+            //         .links(edges)
+            //         .size([width, height])
+            //         .linkDistance(50)
+            //         .charge([-200]);
                 
-                force.start();
+            //     force.start();
 
-                var svg_edges = svg.append('g')
-                    .attr("class", "links")
-                    .selectAll("line")
-                    .data(edges)
-                    .enter()
-                    .append("line")
-                    .style("stroke", "#ccc")
-                    .style("stroke-width", 1);
+            //     var svg_edges = svg.append('g')
+            //         .attr("class", "links")
+            //         .selectAll("line")
+            //         .data(edges)
+            //         .enter()
+            //         .append("line")
+            //         .style("stroke", "#ccc")
+            //         .style("stroke-width", 1);
             
-                var svg_nodes = svg.append('g')
-                    .attr("class", "nodes")
-                    .selectAll("circle")
-                    .data(graph.nodes)
-                    .enter()
-                    .append("circle")
-                    .attr("r", function(d){return parseInt(d.size);})
-                    .style("fill", function(d){return colors[parseInt(d.group)];})
-                    .call(force.drag)
-                    .on("click", function(d){
-                        var clickedCircle = this;
-                        d3.selectAll(".circle").each(function(){
-                            var currCircle = this;
-                            d3.select(this).select()
-                        })
-                    })
+            //     var svg_nodes = svg.append('g')
+            //         .attr("class", "nodes")
+            //         .selectAll("circle")
+            //         .data(graph.nodes)
+            //         .enter()
+            //         .append("circle")
+            //         .attr("r", function(d){return parseInt(d.size);})
+            //         .style("fill", function(d){return colors[parseInt(d.group)];})
+            //         .call(force.drag)
+            //         .on("click", function(d){
+            //             var clickedCircle = this;
+            //             d3.selectAll(".circle").each(function(){
+            //                 var currCircle = this;
+            //                 d3.select(this).select()
+            //             })
+            //         })
 
                 
-                var svg_texts = svg.append('g')
-                    .attr("class", "texts")
-                    .selectAll("text")
-                    .data(graph.nodes)
-                    .enter()
-                    .append("text")
-                    .attr("text-anchor", "middle")
-                    .style("fill", "black")
-                    .attr("dx", 20)
-                    .attr("dy", 8)
-                    .text(function(d){return d.id;});
+            //     var svg_texts = svg.append('g')
+            //         .attr("class", "texts")
+            //         .selectAll("text")
+            //         .data(graph.nodes)
+            //         .enter()
+            //         .append("text")
+            //         .attr("text-anchor", "middle")
+            //         .style("fill", "black")
+            //         .attr("dx", 20)
+            //         .attr("dy", 8)
+            //         .text(function(d){return d.id;});
                 
-                var svg_labels = svg.append('g')
-                    .attr("class", "linetexts")
-                    .selectAll("text")
-                    .data(edges)
-                    .enter()
-                    .append("text")
-                    .style("display","block")
-                    .text(function(d){return d.relation;})
-                    .style("visibility", "hidden");
+            //     var svg_labels = svg.append('g')
+            //         .attr("class", "linetexts")
+            //         .selectAll("text")
+            //         .data(edges)
+            //         .enter()
+            //         .append("text")
+            //         .style("display","block")
+            //         .text(function(d){return d.relation;})
+            //         .style("visibility", "hidden");
                 
-                function zoomed() {
-                    svg_edges.attr("transform", d3.event.transform);
-                    svg_nodes.attr("transform", d3.event.transform);
-                    svg_texts.attr("transform", d3.event.transform);
-                    svg_labels.attr('transform', d3.event.transform);
-                }
+            //     function zoomed() {
+            //         svg_edges.attr("transform", d3.event.transform);
+            //         svg_nodes.attr("transform", d3.event.transform);
+            //         svg_texts.attr("transform", d3.event.transform);
+            //         svg_labels.attr('transform', d3.event.transform);
+            //     }
 
-                // svg.call(d3.zoom()
-                //     .scaleExtent([1 / 8, 8])
-                //     .on("zoom", zoomed));
+            //     // svg.call(d3.zoom()
+            //     //     .scaleExtent([1 / 8, 8])
+            //     //     .on("zoom", zoomed));
                 
-                force.on("tick", function(){
-                    svg_edges.attr("x1", function(d){return d.source.x;})
-                            .attr("y1", function(d){return d.source.y;})
-                            .attr("x2", function(d){return d.target.x;})
-                            .attr("y2", function(d){return d.target.y;});
+            //     force.on("tick", function(){
+            //         svg_edges.attr("x1", function(d){return d.source.x;})
+            //                 .attr("y1", function(d){return d.source.y;})
+            //                 .attr("x2", function(d){return d.target.x;})
+            //                 .attr("y2", function(d){return d.target.y;});
                     
-                    svg_nodes.attr("cx", function(d){return d.x;})
-                            .attr("cy", function(d){return d.y;});
+            //         svg_nodes.attr("cx", function(d){return d.x;})
+            //                 .attr("cy", function(d){return d.y;});
                     
-                    svg_texts.attr("x", function(d){return d.x;})
-                            .attr("y", function(d){return d.y;});
+            //         svg_texts.attr("x", function(d){return d.x;})
+            //                 .attr("y", function(d){return d.y;});
                     
-                    svg_labels.attr("x", function(d){return (d.source.x + d.target.x) / 2;})
-                            .attr("y", function(d){return (d.source.y + d.target.y) / 2;});
-                })
-            })
-            
+            //         svg_labels.attr("x", function(d){return (d.source.x + d.target.x) / 2;})
+            //                 .attr("y", function(d){return (d.source.y + d.target.y) / 2;});
+            //     })
+            // })
+            });
         </script>
     </body>
 </html>
