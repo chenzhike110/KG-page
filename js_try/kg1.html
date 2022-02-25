@@ -1,0 +1,146 @@
+<html>
+    <head>
+        <meta charset="utf-8"> 
+        <title>Force</title> 
+    </head>
+    <style>
+        body {
+            background-color: #272b30;   /*背景颜色*/
+            padding-bottom: 30px, 40px;
+            text-align: center;
+            font-family: OpenSans-Light, PingFang SC, Hiragino Sans GB, Microsoft Yahei, Microsoft Jhenghei, sans-serif;
+        }
+    </style>
+    <body>
+        <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+        <script>
+            var width = 860;
+            var height = 560;
+            var dish = [
+                {"菜名": "心里美黄彩椒拌海参", "主料": ["黄彩椒", "心里美", "海参"], "辅料": ["盐", "生抽", "米醋", "香油", "红油辣椒"], "步骤": ["心里美萝卜切薄片。", "黄彩椒切细丝。", "泡发好的海参焯一下水。", "洗一下切条。", "海参，心里美，黄彩椒放大碗里。", "适量盐，生抽，米醋，香油调味儿。喜欢香菜的放一点。", "拌匀。", "成品。", "成品。"]},
+                {"菜名": "黄瓜拌海参", "主料": ["黄瓜", "海参"], "辅料": ["蒜蓉", "小米椒", "盐", "生抽", "陈醋", "香油"], "步骤": ["泡发煮好的海参。", "切成海参圈。", "黄瓜拍一下，切小段。", "小米椒，蒜蓉。", "黄瓜和海参放盘子里。", "蒜蓉小米椒放上面。", "适量盐，生抽，陈醋，香油调味儿。", "浇入盘中，拌匀即可。", "成品。"]}
+            ];
+            var nodes = [];
+            // var edges = [{source: 0, target: 1}, {source: 0, target: 2}];
+            var edges_name = [];
+            var edges = [];
+
+            const getIndex = (findObj, array) => (
+                array.findIndex(obj => (
+                    obj.id === findObj
+                ))
+            );
+            dish.map(function(item) {
+                nodes.push({id: item["菜名"], size:"15", group:"1"});
+                var sourceIndex = getIndex(item["菜名"], nodes);
+                for (var vege in item["主料"]) {
+                    if (getIndex(item["主料"][vege], nodes) < 0) {
+                        nodes.push({id: item["主料"][vege], size:"12", group:"2"});
+                    }
+                    edges.push({
+                        source: sourceIndex, 
+                        target: getIndex(item["主料"][vege], nodes),
+                        relation: "主料"
+                    });
+                }
+                for (var vege in item["辅料"]) {
+                    if (getIndex(item["辅料"][vege], nodes) < 0) {
+                        nodes.push({id: item["辅料"][vege], size:"9", group:"3"});
+                    }
+                    edges.push({
+                        source: sourceIndex, 
+                        target: getIndex(item["辅料"][vege], nodes),
+                        relation: "辅料"
+                    });
+                }
+            });
+
+            console.log(edges);
+
+            var force = d3.layout.force()
+                .nodes(nodes)
+                .links(edges)
+                .size([width, height])
+                .linkDistance(100)
+                .charge([-400]);
+            
+            force.start();
+
+            // draw
+            var svg = d3.select("body")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+            // var color = d3.scale.category20();
+            var colors = ['#6ca46c', '#ca635f', '#4e88af'];
+
+            var svg_edges = svg.append('g')
+                .attr("class", "links")
+                .selectAll("line")
+                .data(edges)
+                .enter()
+                .append("line")
+                .style("stroke", "#ccc")
+                .style("stroke-width", 1);
+            
+            var svg_nodes = svg.append('g')
+                .attr("class", "nodes")
+                .selectAll("circle")
+                .data(nodes)
+                .enter()
+                .append("circle")
+                .attr("r", function(d){return d.size;})
+                .style("fill", function(d){return colors[parseInt(d.group)];})
+                .call(force.drag);
+            
+            var svg_texts = svg.append('g')
+                .attr("class", "texts")
+                .selectAll("text")
+                .data(nodes)
+                .enter()
+                .append("text")
+                .attr("text-anchor", "middle")
+                .style("fill", "black")
+                .attr("dx", 20)
+                .attr("dy", 8)
+                .text(function(d){return d.id;});
+            
+            var svg_labels = svg.append('g')
+                .attr("class", "linetexts")
+                .selectAll("text")
+                .data(edges)
+                .enter()
+                .append("text")
+                .style("display","block")
+                .text(function(d){return d.relation;});
+            
+            // function zoomed() {
+            //     svg_edges.attr("transform", d3.event.transform);
+            //     svg_nodes.attr("transform", d3.event.transform);
+            //     svg_texts.attr("transform", d3.event.transform);
+            //     svg_labels.attr('transform', d3.event.transform);
+            // }
+
+            // svg.call(d3.zoom()
+            //     .scaleExtent([1 / 8, 8])
+            //     .on("zoom", zoomed))
+            
+            force.on("tick", function(){
+                svg_edges.attr("x1", function(d){return d.source.x;})
+                         .attr("y1", function(d){return d.source.y;})
+                         .attr("x2", function(d){return d.target.x;})
+                         .attr("y2", function(d){return d.target.y;});
+                
+                svg_nodes.attr("cx", function(d){return d.x;})
+                         .attr("cy", function(d){return d.y;});
+                
+                svg_texts.attr("x", function(d){return d.x;})
+                         .attr("y", function(d){return d.y;});
+                
+                svg_labels.attr("x", function(d){return (d.source.x + d.target.x) / 2;})
+                          .attr("y", function(d){return (d.source.y + d.target.y) / 2;});
+            })
+        </script>
+    </body>
+</html>

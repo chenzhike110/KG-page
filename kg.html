@@ -347,7 +347,6 @@
         <!-- 提示 -->
             <div id="tips"></div>
         </div>
-        /*
         <div style="text-align: center;position: relative;">
             <svg width="960" height="240" id="svg2" style="margin-right: 60px;">
                 <!-- D3 -->
@@ -383,115 +382,173 @@
                 $('#tips').append("<div>" + help[i] +"</div>")
             }
 
-            // d3.json("/home/czk119/Desktop/Knowledge-graph/KG-page/data/vizdata_mimini_aglin.json", function(data) {
-
-            //     graph = data;
-
-            //     graph.links.map(function(item) {
-            //         edges.push({
-            //             source: find_index(item.source), 
-            //             target: find_index(item.target),
-            //             relation: item.relation,
-            //             color: item.value
-            //         })
-            //     });
-
-            //     function find_index(name) {
-            //         var index = 0;
-            //         var tmp = graph.nodes.find(function(item, i){
-            //             if(item.id == name){
-            //                 index = i;
-            //                 return i;
-            //             }
-            //         });
-            //         return index;
-            //     };
-
-            //     var force = d3.layout.force()
-            //         .nodes(graph.nodes)
-            //         .links(edges)
-            //         .size([width, height])
-            //         .linkDistance(50)
-            //         .charge([-200]);
+            d3.json("https://raw.githubusercontent.com/chenzhike110/KG-page/main/data/dishes.json?token=GHSAT0AAAAAABROGETPDEOQBIYSIC47ND7UYQW5J3A", function(data) {
                 
-            //     force.start();
+                var nodes = [];
+                var edges = [];
 
-            //     var svg_edges = svg.append('g')
-            //         .attr("class", "links")
-            //         .selectAll("line")
-            //         .data(edges)
-            //         .enter()
-            //         .append("line")
-            //         .style("stroke", "#ccc")
-            //         .style("stroke-width", 1);
+                function find_index(name) {
+                    var index = 0;
+                    var tmp = nodes.find(function(item, i){
+                        if(item.id == name){
+                            index = i;
+                            return i;
+                        }
+                    });
+                    return index;
+                };
+
+                graph = data;
+
+                graph.map(function(item) {
+                    nodes.push({id: item["菜名"], size:"15", group:"1"});
+                    for (var vege in item["主料"]) {
+                        nodes.push({id: item["主料"][vege], size:"12", group:"2"});
+                        edges.push({
+                            source: find_index(item["菜名"]), 
+                            target: find_index(item["主料"][vege]),
+                            relation: "主料"
+                        });
+                    }
+                    for (var vege in item["辅料"]) {
+                        nodes.push({id: item["辅料"][vege], size:"9", group:"3"});
+                        edges.push({
+                            source: find_index(item["菜名"]), 
+                            target: find_index(item["辅料"][vege]),
+                            relation: "辅料"
+                            // color: item.value
+                        });
+                    }
+                });
+
+                var force = d3.layout.force()
+                    .nodes(nodes)
+                    .links(edges)
+                    .size([width, height])
+                    .linkDistance(50)
+                    .charge([-200]);
+                
+                force.start();
+
+                var svg_edges = svg.append('g')
+                    .attr("class", "links")
+                    .selectAll("line")
+                    .data(edges)
+                    .enter()
+                    .append("line")
+                    .style("stroke", "#ccc")
+                    .style("stroke-width", 1);
             
-            //     var svg_nodes = svg.append('g')
-            //         .attr("class", "nodes")
-            //         .selectAll("circle")
-            //         .data(graph.nodes)
-            //         .enter()
-            //         .append("circle")
-            //         .attr("r", function(d){return parseInt(d.size);})
-            //         .style("fill", function(d){return colors[parseInt(d.group)];})
-            //         .call(force.drag)
-            //         .on("click", function(d){
-            //             var clickedCircle = this;
-            //             d3.selectAll(".circle").each(function(){
-            //                 var currCircle = this;
-            //                 d3.select(this).select()
-            //             })
-            //         })
+                var svg_nodes = svg.append('g')
+                    .attr("class", "nodes")
+                    .selectAll("circle")
+                    .data(nodes)
+                    .enter()
+                    .append("circle")
+                    .attr("r", function(d){
+                        return parseInt(d.size);
+                    })
+                    .style("fill", function(d){
+                        return colors[parseInt(d.group)];
+                    })
+                    .attr('stroke', 'none')    // 没有描边
+                    .attr('name', function(d){
+                        return d.id;
+                    })
+                    .call(force.drag)
+                    .on("click", function(d){
+                        var clickedCircle = this;
+                        d3.selectAll(".circle").each(function(){
+                            var currCircle = this;
+                            d3.select(this).select()
+                        })
+                    })
 
                 
-            //     var svg_texts = svg.append('g')
-            //         .attr("class", "texts")
-            //         .selectAll("text")
-            //         .data(graph.nodes)
-            //         .enter()
-            //         .append("text")
-            //         .attr("text-anchor", "middle")
-            //         .style("fill", "black")
-            //         .attr("dx", 20)
-            //         .attr("dy", 8)
-            //         .text(function(d){return d.id;});
-                
-            //     var svg_labels = svg.append('g')
-            //         .attr("class", "linetexts")
-            //         .selectAll("text")
-            //         .data(edges)
-            //         .enter()
-            //         .append("text")
-            //         .style("display","block")
-            //         .text(function(d){return d.relation;})
-            //         .style("visibility", "hidden");
-                
-            //     function zoomed() {
-            //         svg_edges.attr("transform", d3.event.transform);
-            //         svg_nodes.attr("transform", d3.event.transform);
-            //         svg_texts.attr("transform", d3.event.transform);
-            //         svg_labels.attr('transform', d3.event.transform);
-            //     }
+                var svg_texts = svg.append('g')
+                    .attr("class", "texts")
+                    .selectAll("text")
+                    .data(nodes)
+                    .enter()
+                    .append("text")
+                    .attr("text-anchor", "middle")
+                    .style("fill", "black")
+                    .attr("dx", 20)
+                    .attr("dy", 8)
+                    .attr("font-size", function(d) {
+                        return d.size
+                    })
+                    .attr("fill", function(d) {
+                        return colors[d.group];
+                    })
+                    .attr('name', function(d) {
+                        return d.id;
+                    })
+                    .text(function(d) {
+                        return d.id;
+                    })
 
-            //     // svg.call(d3.zoom()
-            //     //     .scaleExtent([1 / 8, 8])
-            //     //     .on("zoom", zoomed));
+                svg_nodes.append('title').text(function(d){
+                    return d.id;
+                })
                 
-            //     force.on("tick", function(){
-            //         svg_edges.attr("x1", function(d){return d.source.x;})
-            //                 .attr("y1", function(d){return d.source.y;})
-            //                 .attr("x2", function(d){return d.target.x;})
-            //                 .attr("y2", function(d){return d.target.y;});
+                // var svg_labels = svg.append('g')
+                //     .attr("class", "linetexts")
+                //     .selectAll("text")
+                //     .data(edges)
+                //     .enter()
+                //     .append("text")
+                //     .style("display","block")
+                //     .style("color","red")
+                //     .text(function(d){
+                //         return d.relation;
+                //     });
+                
+                function zoomed() {
+                    svg_edges.attr("transform", d3.event.transform);
+                    svg_nodes.attr("transform", d3.event.transform);
+                    svg_texts.attr("transform", d3.event.transform);
+                    // svg_labels.attr('transform', d3.event.transform);
+                }
+
+                // svg.call(d3.zoom()
+                //     .scaleExtent([1 / 8, 8])
+                //     .on("zoom", zoomed));
+                
+                force.on("tick", function(){
+                    svg_edges.attr("x1", function(d){return d.source.x;})
+                            .attr("y1", function(d){return d.source.y;})
+                            .attr("x2", function(d){return d.target.x;})
+                            .attr("y2", function(d){return d.target.y;});
                     
-            //         svg_nodes.attr("cx", function(d){return d.x;})
-            //                 .attr("cy", function(d){return d.y;});
+                    svg_nodes.attr("cx", function(d){return d.x;})
+                            .attr("cy", function(d){return d.y;});
                     
-            //         svg_texts.attr("x", function(d){return d.x;})
-            //                 .attr("y", function(d){return d.y;});
+                    svg_texts.attr("x", function(d){return d.x;})
+                            .attr("y", function(d){return d.y;});
                     
-            //         svg_labels.attr("x", function(d){return (d.source.x + d.target.x) / 2;})
-            //                 .attr("y", function(d){return (d.source.y + d.target.y) / 2;});
-            //     })
-            // })
+                    // svg_labels.attr("x", function(d){return (d.source.x + d.target.x) / 2;})
+                    //         .attr("y", function(d){return (d.source.y + d.target.y) / 2;});
+                })
+                // 处理模式点击后的事件(这些元素页面上本来有)
+                $('#mode span').click(function(event) {
+                    // 把mode里面所有span的active全部去掉
+                    // 把被点击的这个设置为active
+                    $('#mode span').removeClass('active')
+                    $(this).addClass('active')
+
+                    if ($(this).text() == 'Circles') {
+                        // 隐藏所有文本里面的svg元素
+                        // 把node里面的显示出来
+                        $('.texts text').hide();
+                        $('.nodes circle').show();
+                    }
+                    else {
+                        $('.texts text').show();
+                        $('.nodes circle').hide ();
+                    }
+                });
+            })
             });
         </script>
     </body>
