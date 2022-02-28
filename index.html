@@ -361,8 +361,6 @@
                     ))
                 );
 
-
-
                 graph = data;
 
                 graph.map(function(item) {
@@ -390,6 +388,8 @@
                         });
                     }
                 });
+
+                d3.json("http://127.0.0.1:8000/data/process.json")
 
                 // var force = d3.layout.force()
                 //     .nodes(nodes)
