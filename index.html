@@ -281,11 +281,11 @@
                 <span style="border-top-left-radius: 0;border-bottom-left-radius: 0;position: relative;left: -5px;">Texts</span>
             </div>
 
-            <!-- 显示切换1 -->
+            <!-- 显示切换1
             <div id="switch1">
                 <span class="active" style="border-top-right-radius: 0;border-bottom-right-radius: 0;">On</span>
                 <span style="border-top-left-radius: 0;border-bottom-left-radius: 0;position: relative;left: -5px;">Off</span>
-            </div>
+            </div> -->
 
             <!-- 显示切换2 -->
             <div id="switch2">
@@ -326,34 +326,28 @@
                 width = svg.attr('width'), 
                 height = svg.attr('height');
 
-            var names = ['菜品', '原料', '工艺'];
-            var colors = ['#6ca46c', '#ca635f', '#4e88af', '#edcf4a'];
+            var names = ['物体', '操作'];
+            var colors = ['#6ca46c', '#ca635f'];
 
             for (var i = 0; i < names.length; i++) {
                 // 选中indicator，每一种都append一个div，就是前面的小色块
                 $('#indicator').append("<div><span style='background-color:" + colors[i] + "'></span>" + names[i] +"</div>")
             }
 
-            // var help = ['小助手', '1.开始如果没有节点和边的网状可视化显示，刷新便可出现', '2.鼠标放置在任意节点上，出现和此节点相关的所有节点及之间的关系，右侧自动呈现菜品相关信息', '3.搜索框中输入菜品名称，呈现此菜品所有相关节点，并且此时鼠标位于某个节点上方时移开鼠标能够保持知识图谱当前状态', '4.模式切换按钮可切换对节点的不同可视化表示，Circles为点，Texts为文字', '5.左侧不同颜色的条形表示不同类型的节点，On/Off切换开关可打开或关闭同样类型所有节点的可视化显示'];
-            // $('#tips').append("<div><span>" + help[0] + "</span></div>")
-            // for (var i = 1; i < help.length; i++) {
-            //     // 选中indicator，每一种都append一个div，就是前面的小色块
-            //     $('#tips').append("<div>" + help[i] +"</div>")
-            // }
-
-            var nodes = [];
+            var nodes = [{id: "Kitchen", size:"18", group:"1"}];
             var edges = [];
 
             var simulation = d3.forceSimulation()
-                .force("link", d3.forceLink().id(function(d, i){
+                .force("link", d3.forceLink().distance(90).id(function(d, i){
                     return d.index;
                 }))
                 .force("charge", d3.forceManyBody())
                 .force("center", d3.forceCenter(width / 2, height / 2));
+                // .force("collide", d3.forceCollide(18));
 
             var graph;
 
-            d3.json("http://127.0.0.1:8000/data/dishes.json", function(data) {
+            d3.json("http://127.0.0.1:8000/data/kitchen.json", function(data) {
 
                 const getIndex = (findObj, array) => (
                     array.findIndex(obj => (
@@ -364,32 +358,42 @@
                 graph = data;
 
                 graph.map(function(item) {
-                    nodes.push({id: item["菜名"], size:"15", group:"0"});
-                    var sourceIndex = getIndex(item["菜名"], nodes);
-                    for (var vege in item["主料"]) {
-                        if (getIndex(item["主料"][vege], nodes) < 0) {
-                            nodes.push({id: item["主料"][vege], size:"12", group:"1"});
-                        }
-                        edges.push({
-                            source: sourceIndex, 
-                            target: getIndex(item["主料"][vege], nodes),
-                            relation: "主料",
-                        });
-                    }
-                    for (var vege in item["辅料"]) {
-                        if (getIndex(item["辅料"][vege], nodes) < 0) {
-                            nodes.push({id: item["辅料"][vege], size:"12", group:"1"});
-                        }
-                        edges.push({
-                            source: sourceIndex, 
-                            target: getIndex(item["辅料"][vege], nodes),
-                            relation: "辅料",
-                            // color: item.value
-                        });
-                    }
+                    nodes.push({id: item["name"], size:"12", group:"0", description:item["description"]});
+                    var sourceIndex = getIndex("Kitchen", nodes);
+                    edges.push({
+                        source: sourceIndex, 
+                        target: getIndex(item["name"], nodes),
+                        relation: "contain",
+                    });
                 });
 
-                d3.json("http://127.0.0.1:8000/data/process.json")
+                // graph.map(function(item) {
+                //     nodes.push({id: item["菜名"], size:"15", group:"0"});
+                //     var sourceIndex = getIndex(item["菜名"], nodes);
+                //     for (var vege in item["主料"]) {
+                //         if (getIndex(item["主料"][vege], nodes) < 0) {
+                //             nodes.push({id: item["主料"][vege], size:"12", group:"1"});
+                //         }
+                //         edges.push({
+                //             source: sourceIndex, 
+                //             target: getIndex(item["主料"][vege], nodes),
+                //             relation: "主料",
+                //         });
+                //     }
+                //     for (var vege in item["辅料"]) {
+                //         if (getIndex(item["辅料"][vege], nodes) < 0) {
+                //             nodes.push({id: item["辅料"][vege], size:"12", group:"1"});
+                //         }
+                //         edges.push({
+                //             source: sourceIndex, 
+                //             target: getIndex(item["辅料"][vege], nodes),
+                //             relation: "辅料",
+                //             // color: item.value
+                //         });
+                //     }
+                // });
+
+                // d3.json("http://127.0.0.1:8000/data/process.json")
 
                 // var force = d3.layout.force()
                 //     .nodes(nodes)
@@ -555,108 +559,6 @@
             var sw2 = true;
             var sw3 = true;
 
-            // 处理开关1点击后的事件(这些元素页面上本来有)
-            $('#switch1 span').click(function(event) {
-                // 把mode里面所有span的active全部去掉
-                // 把被点击的这个设置为active
-                $('#switch1 span').removeClass('active')
-                $(this).addClass('active')
-
-                if ($(this).text() == 'On') {
-                    sw1 = true;
-                    d3.select('#svg1 .nodes').selectAll('circle').attr('class', function(d){
-                            // 当前选中类型实体显示
-                    if (d.group == 0 && sw1 == true) {
-                        return '';
-                    }
-                    else if (d.group == 1 && sw2 == true){
-                        return '';
-                    }
-                    else if (d.group == 2 && sw3 == true){
-                        return '';
-                    }
-                    else{
-                        return 'inactive'
-                    }
-                        });
-                    d3.select("#svg1 .links").selectAll('line').attr('class', function(d) {
-                        if ((d.source.group == 0 || d.target.group == 0) && sw1 == false) {
-                            return 'inactive';
-                        }
-                        else if ((d.source.group == 1 || d.target.group == 1) && sw2 == false){
-                            return 'inactive';
-                        }
-                        else if ((d.source.group == 2 || d.target.group == 2) && sw3 == false){
-                            return 'inactive';
-                        }
-                        else{
-                            return '';
-                        }
-                    });
-                    d3.select('#svg1 .texts').selectAll('text').attr('class', function(d){
-                            // 当前选中类型实体显示
-                        if (d.group == 0 && sw1 == true) {
-                            return '';
-                        }
-                        else if (d.group == 1 && sw2 == true){
-                            return '';
-                        }
-                        else if (d.group == 2 && sw3 == true){
-                            return '';
-                        }
-                        else{
-                            return 'inactive'
-                        }
-                    });
-                }
-                else {
-                    sw1 = false;
-                    d3.select('#svg1 .nodes').selectAll('circle').attr('class', function(d){
-                            // 当前选中类型实体显示
-                    if (d.group == 0 && sw1 == true) {
-                        return '';
-                    }
-                    else if (d.group == 1 && sw2 == true){
-                        return '';
-                    }
-                    else if (d.group == 2 && sw3 == true){
-                        return '';
-                    }
-                    else{
-                        return 'inactive'
-                    }
-                        });
-                    d3.select("#svg1 .links").selectAll('line').attr('class', function(d) {
-                        if ((d.source.group == 0 || d.target.group == 0) && sw1 == false) {
-                            return 'inactive';
-                        }
-                        else if ((d.source.group == 1 || d.target.group == 1) && sw2 == false){
-                            return 'inactive';
-                        }
-                        else if ((d.source.group == 2 || d.target.group == 2) && sw3 == false){
-                            return 'inactive';
-                        }
-                        else{
-                            return '';
-                        }
-                    });
-                    d3.select('#svg1 .texts').selectAll('text').attr('class', function(d){
-                            // 当前选中类型实体显示
-                        if (d.group == 0 && sw1 == true) {
-                            return '';
-                        }
-                        else if (d.group == 1 && sw2 == true){
-                            return '';
-                        }
-                        else if (d.group == 2 && sw3 == true){
-                            return '';
-                        }
-                        else{
-                            return 'inactive'
-                        }
-                    });
-                }
-            });
             $('#switch2 span').click(function(event) {
                 // 把mode里面所有span的active全部去掉
                 // 把被点击的这个设置为active
@@ -861,7 +763,7 @@
             });
             const findDish = (findObj, array) => (
                 array.findIndex(obj => (
-                    obj['菜名'] === findObj
+                    obj['name'] === findObj
                 ))
             );
             $('#svg1').on('mouseenter', '.nodes circle', function(event) {
@@ -878,7 +780,7 @@
                     console.log(index);
                     console.log(name)
                     for (var key in info[index]) {
-                        if (key == '菜名') {
+                        if (key == 'name') {
                             continue
                         }
                         value = info[index][key];
@@ -902,12 +804,13 @@
                                 item_info = item_info + info[index][key][food_item];
                             }
                             else{
-                                item_info = item_info + "&nbsp;||&nbsp;" + info[index][key][food_item];
+                                item_info = item_info + info[index][key][food_item]; 
                             }
                             count = count + 1;
                         }
                         $('#info').append('<p>' + item_info + '</p>');
                     }
+                    // "&nbsp;||&nbsp;" + 
                     // d3.select('#svg1 .nodes').selectAll('circle').attr('class', function(d){
                     //     // 是目前悬浮的那个
                     //     if (d.id == name) {
@@ -964,7 +867,7 @@
             // 结点信息框
             var info;
 
-            d3.json("http://127.0.0.1:8000/data/dishes.json", function(error, data){
+            d3.json("http://127.0.0.1:8000/data/kitchen.json", function(error, data){
                 info = data;
             })
         });
